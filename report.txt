@@ -1,0 +1,628 @@
+REPORT
+
+----------------------------------------------------------------------------------------------------------------
+| PART 1                                                                                                       |
+----------------------------------------------------------------------------------------------------------------
+
+---------------
+| class Actor |
+---------------
+
+Actor(StudentWorld* w, int imageID, double x, double y, int dir, int depth) :
+    Creates the Actor and sets its status to alive and stores a pointer to the StudentWorld that created it.
+    Passes the coordinates, imageID, direction and depth to its base class GraphObject
+
+virtual void doSomething() = 0 :
+    This function is virtual because every actor has its own implementation of what it needs to do on each tick.
+    The function is pure virtual because every actor NEEDS to have an action and also because there is no general
+    action for an Actor and therefore objects of Actor cannot be created.
+
+bool isDead() const :
+    The function returns true is actor is is dead 
+    The function is declared in the base class because every actor has the same implementation
+
+void setDead() :
+    The function sets the actors alive status to false
+    The function is declared in the base class because every actor has the same implementation
+
+StudentWorld* getWorld() const :
+    The function returns a pointer to the StudentWorld that created the actor
+    The function is declared in the base class because every actor has the same implementation
+
+virtual void activate(Actor* a) :
+    For activating objects, the function performs the appropriate action on Actor a
+    The function is virtual because only some actors have the capability to be activated and each of
+    those functions has its own implementation.
+    The base class implementation for this method does nothing, therefore even if a non activating object is 
+    asked to activate itself, nothing will happen
+
+virtual void useExit() :
+    The function is virtual because only some actors have the capability exit and each of
+    those functions has its own implementation (Citizens leaving rewards points while no points are given for
+    penelope leaving)
+    The base class implementation for this method does nothing, therefore even if an object that cannot leave is 
+    asked to leave, nothing will happen
+
+virtual void dieByFallOrBurn() :
+    The function is virtual because only some actors have the capability to be burnt by a flame or fall in a pit and each of
+    those functions has its own implementation (DumbZombies may drop vaccines when burnt but SmartZombies dont)
+    The base class implementation for this method does nothing, therefore even if an object that cannot be burnt is 
+    asked to kill itself because of a burn, nothing will happen
+
+virtual void beVomitedOn() :
+    The function is virtual because only some actors have the capability to be vomited on (Only humans)
+    The base class implementation for this method does nothing, therefore even if an object that cannot be vomited on is
+    asked to experience vomit, nothing will happen
+
+virtual void pickUpGoodie(Goodie* g) :
+    The function is virtual because only Penelope has the capability to pick up goodies
+    The base class implementation for this method does nothing, therefore even if some other actor tries to pick up a goodie, 
+    nothing will happen
+
+virtual bool blocksMovement() const :
+    Virtual because only some Actors block movement (Walls, Humans, Zombies)
+    By default, the base class definition of this function returns false
+    If an actor knows it blocks movements, it can override this function and return true;
+
+virtual bool blocksFlame() const :
+    Virtual because only some Actors block flames (Exits, Walls)
+    By default, the base class definition of this function returns false
+    If an actor knows it blocks flames, it can override this function and return true;
+
+virtual bool triggersOnlyActiveLandmines() const :
+    Virtual because only some Actors triggers mines (Zombies, Humans)
+    By default, the base class definition of this function returns false
+    If an actor knows it triggers mines, it can override this function and return true;
+
+virtual bool triggersZombieVomit() const :
+    Virtual because only some Actors trigger vomit (Humans) 
+    By default, the base class definition of this function returns false
+    If an actor knows it triggers vomit, it can override this function and return true;
+
+virtual bool threatensCitizens() const :
+    Virtual because only some Actors threatens citizens (Zombies)
+    By default, the base class definition of this function returns false
+    If an actor knows it threatens citizens, it can override this function and return true;
+
+virtual bool triggersCitizens() const :
+    Virtual because only some Actors trigger citizens (Zombies, Penelope)
+    By default, the base class definition of this function returns false
+    If an actor knows it triggers citizens, it can override this function and return true;
+
+---------------
+|  class Wall |
+---------------
+
+Wall(StudentWorld* w, double x, double y) :
+    Creates the Wall. Passes on the coordinates and StudentWorld pointer to the base class Actor along
+    with imageID IID_WALL, direction right, and depth 0
+
+virtual void doSomething() :
+    Does nothing because walls have to action
+    Only implented because the doSomething method in base class is pure virtual and requires the base 
+    class to have an implementation
+
+virtual bool blocksMovement() const :
+    Overrides base class method blocksMovement() and returns true because walls block movement
+
+virtual bool blocksFlame() const :
+    Overrides base class method blocksFlame() and returns true because walls block flames
+
+--------------------------
+| class ActivatingObject |
+--------------------------
+
+ActivatingObject(StudentWorld* w, int imageID, double x, double y, int depth, int dir) :
+    Creates an ActivatingObject. Passes the imageID, coordinates, depth and direction to the base class 
+    Actor.
+
+virtual void activate(Actor* a) = 0 :
+    This function is virtual because every actor has its own implementation of what it needs to do when activated.
+    The function is pure virtual because every ActivatingObject NEEDS to have an activating action and also because 
+    there is no general action for an ActivatingObject and therefore ActivatingObject of Actor cannot be created.
+
+-----------------
+|  class Goodie |
+-----------------
+
+Goodie(StudentWorld* w, int imageID, double x, double y) :
+    Creates the Goodie. Passes on the coordinates, StudentWorld pointer and imageID to the base class Actor along
+    with direction right, and depth 0
+
+virtual void activate(Actor* a) :
+    Implementation of the base class pure virtual activate function. Since all goodies, when activated, call 
+    the pickUpGoodie function of Actor a*, this function is impleneted here as common for all goodies
+
+virtual void dieByFallOrBurn() :
+    Overrides the implementation in Actor. Since goodies can be killed by flames, this function sets the goodies
+    status to dead
+
+virtual void pickUp(Penelope* p) = 0 :
+    Every goodie needs to define what it will do if penelope picks it up. This is a requirement of a goodie and
+    therefore this function is pure virtual.
+    Since different goodies reward Penelope with different things, this function is virtual and unimplemented.
+
+--------------------------
+| class VaccineGoodie    |
+--------------------------
+
+VaccineGoodie(StudentWorld* w, double x, double y) :
+    Creates the Goodie. Passes on the coordinates, StudentWorld pointer to the base class Actor along with
+    imageID IID_VACCINE_GOODIE
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Calls the activateOnAppropriateActors function in StudentWorld
+
+virtual void pickUp(Penelope* p) :
+    Implements the pure virtual function in base class Goodie. 
+    Increases game score by 50
+    Increases Penelopes vaccine count by 1
+
+--------------------------
+| class GasCanGoodie     |
+--------------------------
+
+GasCanGoodie(StudentWorld* w, double x, double y) :
+    Creates the Goodie. Passes on the coordinates, StudentWorld pointer to the base class Actor along with
+    imageID IID_GAS_CAN_GOODIE
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Calls the activateOnAppropriateActors function in StudentWorld
+
+virtual void pickUp(Penelope* p) :
+    Implements the pure virtual function in base class Goodie. 
+    Increases game score by 50
+    Increases Penelopes flame count by 5
+
+--------------------------
+| class LandmineGoodie   |
+--------------------------
+
+LandmineGoodie(StudentWorld* w, double x, double y) :
+    Creates the Goodie. Passes on the coordinates, StudentWorld pointer to the base class Actor along with
+    imageID IID_LANDMINE_GOODIE
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Calls the activateOnAppropriateActors function in StudentWorld
+
+virtual void pickUp(Penelope* p) :
+    Implements the pure virtual function in base class Goodie. 
+    Increases game score by 50
+    Increases Penelopes landmine count by 2
+
+-----------------
+|  class Agent  |
+-----------------
+
+Agent(StudentWorld* w, int imageID, double x, double y, int dir) :
+    Creates the Agent. Passes on the coordinates, StudentWorld pointer, imageID, direction to the base class 
+    Actor along with depth 0.
+
+virtual bool blocksMovement() const :
+    Overrides base class implementation and returns true because all agents block movement
+
+virtual bool triggersOnlyActiveLandmines() const :
+    Overrides base class implementation and returns true because all agents trigger landmines
+
+-----------------
+|  class Human  |
+-----------------
+
+Human(StudentWorld* w, int imageID, double x, double y) :
+    Creates human. Passes on the coordinates, StudentWorld pointer, imageID to the base class 
+    Agent along with direction right.
+
+virtual void beVomitedOn() :
+    Overrides base class implementation
+    Sets humans infection state to true and increases its infection count from 0 to 1
+        
+virtual bool triggersZombieVomit() const :
+    Overrides base class implementation and returns true because all humans trigger zombie vomit
+ 
+void clearInfection() :
+    Sets infection status to false and infection level to 0
+
+int getInfectionDuration() const :
+    Returns infection level of Human
+    
+bool isInfected() const :
+    Returns true if infected, false otherwise
+
+void infect() :
+    Increases infection level by 1
+
+--------------------------
+| class Penelope         |
+--------------------------
+
+Penelope(StudentWorld* w, double x, double y) :
+    Creates Penelope. Passes on the coordinates, StudentWorld pointer to the base class Human
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Pseudocode:
+        Check if dead and return if dead
+        If infected:
+            increase infection count
+            if infection count is 500, kill Penelope
+        Get key press:
+            if arrow keys/ WASD:
+                call movePenelope(key)
+            if space:
+                call fireFlame()
+            if enter:
+                if has vaccines, clear infection 
+            if tab:
+                if has landmines, add landmine to StudentWorld at current location
+
+virtual void useExit() :
+    Overrides the base class function in Actor
+    If all citizens are dead or have used the exit(s), move to next level
+    
+virtual void dieByFallOrBurn() :
+    Overrides the base class function in Actor
+    Set Penelope to dead, play SOUND_PLAYER_DIE
+
+virtual void pickUpGoodie(Goodie* g) :
+    Overrides the base class function in Actor
+    Set Goodie g to dead
+    Play SOUND_GOT_GOODIE
+    Call Goodie g's pickUp function
+
+void increaseVaccines(int x) :
+    Increase the number of vaccines the object has.
+
+void increaseFlameCharges(int x) :
+    Increase the number of flame charges the object has.
+
+void increaseLandmines(int x) :
+    Increase the number of landmines the object has.
+
+int getNumVaccines() const :
+    Returns number of vaccines Penelope has
+
+int getNumFlameCharges() const :
+    Returns number of flame charges Penelope has
+
+int getNumLandmines() const :
+    Returns number of landmines Penelope has
+
+virtual bool triggersCitizens() const : 
+    Overrides base class function to return true as Penelope triggers citizens to 
+    move towards her
+
+--------------------------
+| class Citizen          |
+--------------------------
+
+Citizen(StudentWorld* w,  double x, double y) :
+    Creates Citizen. Passes on the coordinates, StudentWorld pointer to the base class Human
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Pseudocode:
+    return if dead
+    if infected:
+        increase infection level
+        if infection level is 500:
+            set citizen as dead, play SOUND_ZOMBIE_BORN and record death
+            produce random int between 1 and 10 inclusive
+            if randomnumber is <= 7:
+                create new DumbZombie at current location
+            else:
+                create new SmartZombie at current location
+    if paralyzed:
+        toggle paralysis and return
+    toggle paralysis
+
+    locate nearest Penelope/Zombie using locateNearestCitizenTrigger() from StudentWorld
+
+    if the nearest trigger is Penelope AND distance to her is <= 80:    
+        if citizen is at same x and y as Penelope:
+            Set direction towards her and move forward if possible
+        else 
+            calculate distances to penelope if citizen was to move up down left or right
+            Depending on whichever was least,
+                pick randomly between vertical and horizontal movement
+                set direction and move vertically/horizontally towards her if possible
+
+    if the nearest trigger is zombie AND distance to it is <= 80:
+        Simulate moving up, down, left and right and see if on moving so, what will the 
+        distance be to nearest zombie, and if movement in that direction is allowed.
+
+        Out of those directions where movement is allowed, pick th one that will move
+        citizen furthest away from Zombies and move in that direction.
+
+
+
+virtual void useExit() :
+    Overrides function in base class Actor
+    set dead
+    Update score, play SOUND_CITIZEN_SAVED and record citizen death
+
+virtual void dieByFallOrBurn() :
+    Overrides function in base class Actor
+    set dead
+    Update score, play SOUND_CITIZEN_DIE and record citizen death
+
+--------------------------
+| class Zombie           |
+--------------------------
+
+Zombie(StudentWorld* w,  double x, double y) :
+    Creates Zombie. Passes on the coordinates, StudentWorld pointer to the base class Agent
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Pseudocode:
+    return if dead
+    if paralyzed:
+        toggle paralysis and return
+    toggle paralysis
+    Calculate coordinates where zombie can vomit
+    Use isZombieVomitTriggerAt function in StudentWorld to determine if trigger exists:
+        if trigger exists:
+            pick random number between 1 and 3
+            if number is 2:
+                Add vomit object at vomit coordinates
+                play SOUND_ZOMBIE_VOMIT
+                return
+
+    Use zombieMovementMechanism() to set direction of zombie appropriately
+    create int newX and newY
+    Depending on direction, set newX and newY to one pixel ahead of zombie
+    if movement to newX, newY allowed:
+        move and set movementPlan to (movementPlan-1)
+    else:
+        set movementPlan to 0
+
+virtual bool triggersCitizens() const : 
+    Overrides function in base class Actor to return true as zombies trigger citizen movement
+
+virtual bool threatensCitizens() const :
+    Overrides function in base class Actor to return true as zombies threaten citizens
+
+int movementPlan() const :
+    return movementplan
+
+void setMovementPlan(int x) :
+    Set movementplan to x
+
+--------------------------
+| class DumbZombie       |
+--------------------------
+
+DumbZombie(StudentWorld* w,  double x, double y) : 
+    Creates Zombie. Passes on the coordinates, StudentWorld pointer to the base class Zombie
+
+virtual void dieByFallOrBurn() :
+    Overrides base class method
+    Pseudocode:
+    set dead
+    play SOUND_ZOMBIE_DIE
+    Pick random direction and calculate coordinates of sprite next to it in chosen direction
+    If no overlap with any object in those coordinates:
+        add VaccineGoodie in those coordinates
+
+--------------------------
+| class SmartZombie       |
+--------------------------
+
+SmartZombie(StudentWorld* w,  double x, double y) : 
+    Creates Zombie. Passes on the coordinates, StudentWorld pointer to the base class Zombie
+
+virtual void dieByFallOrBurn() :
+    Overrides base class method
+    Pseudocode:
+    set dead
+    play SOUND_ZOMBIE_DIE
+
+--------------------------
+| class Exit             |
+--------------------------
+
+Exit(StudentWorld* w, double x, double y) :
+    Creates Exit. Passes on the coordinates, StudentWorld pointer to the base class ActivatingObject
+    and direction right
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    calls activateOnAppropriateActors function from StudentWorld
+
+virtual void activate(Actor* a) :
+    Overrides base class method from Actor
+    calls useExit function of Actor a*
+
+virtual bool blocksFlame() const;
+    Overrides base class method from Actor and returns true
+
+--------------------------
+| class Pit             |
+--------------------------
+
+Pit(StudentWorld* w, double x, double y) :
+    Creates Pit. Passes on the coordinates, StudentWorld pointer to the base class ActivatingObject
+    and direction right
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    calls activateOnAppropriateActors function from StudentWorld
+
+virtual void activate(Actor* a) :
+    Overrides base class method from Actor
+    calls dieByFallOrBurn function of Actor a*
+
+--------------------------
+| class Flame             |
+--------------------------
+
+Flame(StudentWorld* w, double x, double y, int dir) :
+    Creates Flame. Passes on the coordinates, StudentWorld pointer, direction to the base class 
+    ActivatingObject
+    sets numberofticks = 0
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    increments numberofticks
+    calls activateOnAppropriateActors function from StudentWorld
+    if numberofticks >= 2:
+        set dead
+
+virtual void activate(Actor* a) :
+    Overrides base class method from Actor
+    calls dieByFallOrBurn function of Actor a*
+
+--------------------------
+| class Vomit             |
+--------------------------
+
+Vomit(StudentWorld* w, double x, double y, int dir) :
+    Creates Vomit. Passes on the coordinates, StudentWorld pointer, direction to the base class 
+    ActivatingObject
+    sets numberofticks = 0
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    increments numberofticks
+    calls activateOnAppropriateActors function from StudentWorld
+    if numberofticks >= 2:
+        set dead
+
+virtual void activate(Actor* a) :
+    Overrides base class method from Actor
+    calls beVomitedOn function of Actor a*
+
+--------------------------
+| class Landmine         |
+--------------------------
+
+Landmine(StudentWorld* w, double x, double y) :
+    Creates Vomit. Passes on the coordinates, StudentWorld pointer, direction to the base class 
+    ActivatingObject and direction right
+    sets numberofticks = 30
+    sets safety = true
+
+virtual void doSomething() :
+    Implements the pure virtual function in base class Actor. 
+    Pseudocode:
+    if dead, return
+    if safetyOn():
+        decrementSafetyTicks();
+        return;
+    calls activateOnAppropriateActors function from StudentWorld
+
+virtual void activate(Actor* a) :
+    Overrides base class method from Actor
+    if !triggersOnlyActiveLandmines, return
+    calls explosionMechanism();
+
+virtual void dieByFallOrBurn() :
+    calls explosionMechanism();
+
+void explosionMechanism():
+    set dead
+    play SOUND_LANDMINE_EXPLODE
+
+    get x and y coordinates of flames in all 8 surrounding directions
+
+    if not blocked,
+        create flames
+    
+    create flame and pit at current location
+
+bool safetyOn() const :
+    return true if safety on, false otherwise
+
+void turnOffSafety() :
+    turn off safety
+
+void decrementSafetyTicks() :
+    reduce safety ticks by one
+
+----------------------------------------------------------------------------------------------------------------
+| PART 2                                                                                                       |
+----------------------------------------------------------------------------------------------------------------
+
+To the best of my knowledge, I have impleneted everything correctly
+
+----------------------------------------------------------------------------------------------------------------
+| PART 3                                                                                                       |
+----------------------------------------------------------------------------------------------------------------
+
+I was unsure if landmines can be placed on exits, but since the updated executables provided online allowed it,
+I didnt stop Penelope from dropping mines on exits
+
+----------------------------------------------------------------------------------------------------------------
+| PART 4                                                                                                       |
+----------------------------------------------------------------------------------------------------------------
+
+Wall -
+    Tested by bumping into it with Penelope, citizens and zombies
+    Tried firing flames at it
+    Tried exploding mines near it
+
+Goodie - (Vaccine, GasCan, Landmine)
+    Tested by picking up goodies
+    Checked if cannot be picked up by zombies or citizens
+    Checked if can be destroyed by flame
+    Checked if cannot be vomited on by zombie
+
+Penelope - 
+    Tested movement
+    Tested capability to pick up and use goodies
+    Tested if can be vomited on
+    Tested if cannot access exits before all citizens dead/left
+    Tested if can destroy goodies, mines, zombies and citizens
+    Tested if triggers smart zombies
+    Tested if triggers citizens
+
+Citizen - 
+    Tested if can move:
+        when zombie nearby
+        when Penelope nearby
+    Tested if can be vomited on
+    Tested if can access exit
+    Tested if cannot pick up goodies
+    Tested if can be killed by flames/vomit(after 500 ticks)
+
+DumbZombie - 
+    Tested if moves independently of citizen/penelope movement
+    Tested if can be killed
+    Tested if cannot use exit
+    Tested if cannot pick up goodies
+    Tested if can vomit
+
+DumbZombie - 
+    Tested if follows citizen/penelope if nearby
+    Tested if can be killed
+    Tested if cannot use exit
+    Tested if cannot pick up goodies
+    Tested if can vomit
+
+Exit - 
+    Tested if blocks flames
+    Tested if can be used:
+        By citizens only first
+        By human only if all citizens dead/left
+    Tested if causes block in movement
+
+Pit - 
+    Tested if kills agent on it
+    Tested if can be destroyed by flames
+
+Flame - 
+    Tested if can be blocked by exits and walls
+    Tested if kills agents and goodies
+    Tested if cannot kill pit
+
+Vomit - 
+    Tested if causes infection to Humans Only
+
+Landmine - 
+    Tested if creates all 9 flames and 1 pit if possible
+    Tested if explodes when flame hits it
+    Tested if waits 30 ticks before activating
+    Tested if can be activated by any agent
